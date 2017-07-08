@@ -1,0 +1,10 @@
+*~
+*.pyc
+__pycache__/
+*.swp
+
+*.sqlite3
+*.bak
+
+settings.py
+migrations/
