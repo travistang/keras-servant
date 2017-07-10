@@ -9,8 +9,8 @@ class KerasModel(models.Model):
     definition = models.TextField(blank = True,null = True)
 
 class KerasModelWeights(models.Model):
-    name = models.ForeignKey(KerasModel)
+    model = models.ForeignKey(KerasModel)
     date_created = models.DateTimeField(auto_now_add = True)
     weight_name = models.CharField(max_length = 256,unique = True)
-    weight_file = models.FileField(upload_to = 'weights/')
+    weight_file = models.FileField()
 

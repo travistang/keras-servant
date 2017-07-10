@@ -9,4 +9,4 @@ class KerasModelSerializer(serializers.ModelSerializer):
 class KerasModelWeightsSerializer(serializers.ModelSerializer):
     class Meta:
         model = KerasModelWeights
-        fields = ('name','weight_name')
+        fields = ('model','weight_name')
