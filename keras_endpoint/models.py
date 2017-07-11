@@ -14,3 +14,9 @@ class KerasModelWeights(models.Model):
     weight_name = models.CharField(max_length = 256,unique = True)
     weight_file = models.FileField()
 
+class Dataset(models.Model):
+    name = models.CharField(max_length = 256,unique = True)
+    date_created = models.DateTimeField(auto_now_add = True)
+    dataset_file = models.FileField()
+
+

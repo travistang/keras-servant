@@ -18,13 +18,15 @@ from django.http import FileResponse
 def weights_get(request,model_name,file_name = None):
     broker = KerasModelWeightsBroker()
     result,reason = broker.get_weights_model(model_name,file_name) if not file_name else broker.get_weight_file(model_name,file_name)
+
     if not reason:
-        # TODO: selectively return...
         return Response(result) if not file_name else serve_file(result,result.name,'Application/X-hdf')
+
     elif reason == KerasModelWeightsBroker.ERROR_NO_SUCH_MODEL:
         return error_json_response_with_details("no such model: {}".format(model_name))
     else:
         return error_json_response_with_details("weight file named {} for model {} not found".format(file_name,model_name))
+
 
 '''
     Entry point for uploading weight (.hf5) files.

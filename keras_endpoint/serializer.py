@@ -10,3 +10,8 @@ class KerasModelWeightsSerializer(serializers.ModelSerializer):
     class Meta:
         model = KerasModelWeights
         fields = ('model','weight_name')
+
+class DatasetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Dataset
+        fields = ('name',)

@@ -19,5 +19,6 @@ from django.contrib import admin
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^models/', include('keras_endpoint.urls.models')),
-    url(r'^weights/', include('keras_endpoint.urls.weights'))
+    url(r'^weights/', include('keras_endpoint.urls.weights')),
+    url(r'^datasets/',include('keras_endpoint.urls.dataset')),
 ]

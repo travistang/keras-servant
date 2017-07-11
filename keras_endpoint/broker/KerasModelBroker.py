@@ -33,9 +33,20 @@ class KerasModelBroker(object):
         new_model.save()
         return (True,None)
 
+    '''
+        Return the Keras model instance with the name provided
+    '''
     def get_model_instance(self,name):
         model = self.get(name,False)
         if not model:
             return None
-        return create_model_from_json(json_str)
+        return create_model_from_json(model.definition)
 
+    '''
+        Return the shape of the input and output tensor of the Keras model with name provided
+    '''
+    def get_io_shapes(self,name):
+        model = self.get_model_instance(name)
+        if not model:
+            return None
+        return (model.input_shape,model.output_shape)

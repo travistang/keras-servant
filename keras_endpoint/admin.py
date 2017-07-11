@@ -6,3 +6,4 @@ from .models import *
 # Register your models here.
 admin.site.register(KerasModel)
 admin.site.register(KerasModelWeights)
+admin.site.register(Dataset)

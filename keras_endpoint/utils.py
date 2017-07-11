@@ -7,7 +7,7 @@ import errno
 def empty_json_response():
     return Response({},status = status.HTTP_400_BAD_REQUEST)
 def error_json_response_with_details(details):
-    return Response({'detail': details},status = status.HTTP_400_BAD_REQUEST)
+    return Response({'detail': details},status = status.HTTP_404_NOT_FOUND)
 
 def error_json_response(details):
     return Response(details,status = status.HTTP_400_BAD_REQUEST)
