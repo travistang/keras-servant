@@ -40,11 +40,3 @@ def models_save(request):
         return error_json_response_with_details("Model with name {} already exists".format(model_name))
     else:
         return error_json_response_with_details("Model definition is not valid")
-#    if not is_json_valid_keras_model(model_def):
-#        return error_json_response_with_details("Model definition is not valid")
-#    # def ok, saving object...
-#    try:
-#        serializer.save()
-#        return create_success_with_data(serializer.data)
-#    except Exception as e:
-#        return error_json_response(serializer.errors)

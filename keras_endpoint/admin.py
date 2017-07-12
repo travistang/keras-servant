@@ -7,3 +7,6 @@ from .models import *
 admin.site.register(KerasModel)
 admin.site.register(KerasModelWeights)
 admin.site.register(Dataset)
+admin.site.register(PredictTask)
+admin.site.register(TrainTask)
+admin.site.register(TaskSuccessor)

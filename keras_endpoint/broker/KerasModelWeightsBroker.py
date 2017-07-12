@@ -47,7 +47,7 @@ class KerasModelWeightsBroker(object):
             if not result.exists():
                 return (None,KerasModelWeightsBroker.ERROR_NO_SUCH_WEIGHT_FILE)
             # because when it comes to here there should be exactly one result in the query set. So simply return the first one here.
-            return (result[0] if not serialize else KerasModelWeightsSerializer(result).data,None)
+            return (result[0] if not serialize else KerasModelWeightsSerializer(result[0]).data,None)
 
     '''
         Return the file object for weight files given weight model name and file_name

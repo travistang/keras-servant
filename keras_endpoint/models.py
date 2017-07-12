@@ -24,13 +24,17 @@ class Dataset(models.Model):
 '''
 class Task(models.Model):
     name = models.CharField(max_length = 512,primary_key = True)
-    weight = models.ForeignKey(KerasModelWeights, on_delete = models.CASCADE)
+    weight = models.ForeignKey(KerasModelWeights, on_delete = models.CASCADE, null = True)
     date_created = models.DateTimeField(auto_now_add = True)
     completed = models.BooleanField(default = False)
     callback_url = models.URLField(null = True)
 
+    class Meta:
+        abstract = True
+
 class PredictTask(Task):
     input = models.TextField()
+
 '''
     A TrainTask object represents a setting that is essential for training a Keras model.
 
