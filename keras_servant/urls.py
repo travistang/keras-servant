@@ -21,4 +21,5 @@ urlpatterns = [
     url(r'^models/', include('keras_endpoint.urls.models')),
     url(r'^weights/', include('keras_endpoint.urls.weights')),
     url(r'^datasets/',include('keras_endpoint.urls.dataset')),
+    url(r'^execute/',include('keras_endpoint.urls.task')),
 ]

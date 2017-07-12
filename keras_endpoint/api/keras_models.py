@@ -32,7 +32,7 @@ def models_save(request):
 
     # checking passed. checking model defs
     model_def = serializer.validated_data['definition']
-    mode_name = serializer.validated_data['name']
+    model_name = serializer.validated_data['name']
     success,reason = KerasModelBroker().create(model_name,model_def)
     if success:
         return create_success_with_data(serializer.data)
