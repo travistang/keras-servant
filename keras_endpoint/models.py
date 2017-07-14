@@ -74,3 +74,14 @@ class TrainTask(Task):
 class TaskSuccessor(models.Model):
     previous_task = models.ForeignKey(TrainTask, related_name = 'previous_task')
     next_task = models.ForeignKey(TrainTask,related_name = 'next_task')
+
+class Result(models.Model):
+    class Meta:
+        abstract = True
+    date_created = models.DateTimeField(auto_now_add = True)
+class PredictResult(Result):
+    result = models.TextField()
+    of_task = models.OneToOneField(PredictTask,primary_key = True,to_field = 'name')
+class TrainResult(Result):
+    result = models.FileField()
+    of_task = models.OneToOneField(TrainTask,primary_key = True,to_field = 'name')

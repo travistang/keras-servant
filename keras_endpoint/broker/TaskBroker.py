@@ -165,7 +165,7 @@ class TaskBroker(object):
     '''
         Create a training task
     '''
-    def add_train_task(self,model_name,weight_name,dataset_name,task_name,config_str):
+    def add_train_task(self,model_name,weight_name,dataset_name,task_name,config_str,from_task = None):
         # check task name
         train_model = self.get_task_by_name(task_name)
         if train_model:
@@ -199,6 +199,14 @@ class TaskBroker(object):
         except Exception as e:
             raise e
             return TaskBroker.ERROR_CREATE_TASK
+        # and take care of the Task successor issue
+        if from_task:
+            successor = self.get_task_by_name(from_task)
+            if not successor:
+                return # no big deal here
+            relation = TaskSuccessor(successor,task)
+            relation.save()
+
     '''
         Evaluate the model right away...
     '''

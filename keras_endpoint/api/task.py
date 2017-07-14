@@ -42,9 +42,9 @@ def create_train_task(request,dataset_name,model_name,weight_name = None):
         return error_json_response_with_details("Submission of training tasks requires \"config\"  and \"name" "field")
     config = request.POST['config']
     task_name = request.POST['name']
-
+    from_task = request.POST['from_task'] if 'from_task' in request.POST else None
     broker = TaskBroker()
-    error = broker.add_train_task(model_name,weight_name,dataset_name,task_name,config)
+    error = broker.add_train_task(model_name,weight_name,dataset_name,task_name,config,from_task)
     if not error:
         return create_success_with_data([])
     # TODO: handle possible errors here
