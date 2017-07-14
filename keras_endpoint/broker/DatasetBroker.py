@@ -14,14 +14,14 @@ class DatasetBroker(object):
         return serializer.data
 
     '''
-        Return the file of the dataset
+        Return the file of the dataset or the dataset model itself
     '''
-    def get_dataset(self,name):
+    def get_dataset(self,name,get_file = True):
         dataset = Dataset.objects.filter(name = name)
         if not dataset.exists():
             return (None,DatasetBroker.ERROR_DATASET_DOES_NOT_EXIST)
         else:
-            return (dataset[0].dataset_file.file,None)
+            return (dataset[0].dataset_file.file if get_file else dataset[0],None)
     '''
         Determine if the given file complies with the format of datasets
         that will be passed to Keras models
@@ -96,3 +96,15 @@ class DatasetBroker(object):
             # remove the saved dataset file
             os.remove(dataset_path)
             return DatasetBroker.ERROR_SAVING_DATASET
+
+    def get_io_shapes(self,name):
+        dataset,error = self.get_dataset(name,get_file = True)
+        if error:
+            return None
+        path = dataset.name
+        import h5py
+        f = h5py.File(path,'r')
+        in_shape = f['data']['X'].shape
+        out_shape = f['data']['y'].shape
+        f.close()
+        return in_shape,out_shape

@@ -7,3 +7,6 @@ __pycache__/
 *.bak
 
 settings.py
+
+weights/
+datasets/

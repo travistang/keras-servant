@@ -57,3 +57,31 @@ def serve_file(f,filename,mime_type):
     response = HttpResponse(f,content_type = mime_type)
     response['Content-Disposition'] = 'attachment;filename="{}"'.format(filename)
     return response
+
+# returns True if dict contains all keys in "keys"
+def contains_key(dict, keys):
+    return all(x in dict for x in keys)
+
+# returns True if dict contains one of the keys in "keys"
+def contains_one_of(dict,keys):
+    return any(x in dict for x in keys)
+
+# apply all parameters inside a dict object to function f
+def apply_dict(f,dict):
+    return f(**dict)
+
+def is_model_data_shape_consistent(m_in,m_out,d_in,d_out):
+    # preprocessing: remove batch size / num data
+    merge_shape = lambda shapes: tuple(filter(lambda d: d is not None,np.array(shapes).flatten().tolist()))
+
+    # apply to the model's IO shape
+    m_in = m_in[1:] if type(m_in) is tuple else merge_shape(m_in)
+    m_out = m_out[1:] if type(m_out) is tuple else merge_shape(m_out)
+
+    # retrieve shapes for each records in the dataset
+    d_in = d_in[1:]
+    d_out = d_out[1:]
+
+    print m_in,m_out,d_in,d_out
+    # apply checking and return result
+    return m_in == m_out and d_in == d_out
