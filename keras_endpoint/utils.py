@@ -4,6 +4,9 @@ from rest_framework.response import Response
 from rest_framework import status
 import os
 import errno
+import numpy as np
+import json
+
 def empty_json_response():
     return Response({},status = status.HTTP_400_BAD_REQUEST)
 def error_json_response_with_details(details):
@@ -85,3 +88,17 @@ def is_model_data_shape_consistent(m_in,m_out,d_in,d_out):
     print m_in,m_out,d_in,d_out
     # apply checking and return result
     return m_in == m_out and d_in == d_out
+
+def json_to_numpy(s):
+    try:
+        return np.array(json.loads(s))
+    except Exception as e:
+        print e
+        return None
+
+def numpy_to_json(a):
+    try:
+        return json.dumps(a.tolist())
+    except Exception as e:
+        print e
+        return None

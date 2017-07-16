@@ -15,7 +15,7 @@ class TaskBroker(object):
     ERROR_INVALID_CONFIG = 4
     ERROR_CREATE_TASK = 5
     ERROR_MODEL_DATASET_SHAPE_MISMATCH = 6
-
+    ERROR_TASK_DOES_NOT_EXIST = 'ERROR_TASK_DOES_NOT_EXIST'
     def get_task_by_name(self,name):
         try:
             return PredictTask.objects.get(name = name)
@@ -40,7 +40,6 @@ class TaskBroker(object):
             return TaskBroker.ERROR_TASK_ALREADY_EXISTS
 
         weight_model,error = KerasModelWeightsBroker().get_weights_model(model_name,weight_name,False)
-        print type(weight_model)
         if error:
             return error
 
@@ -141,18 +140,20 @@ class TaskBroker(object):
                     #'LambdaCallback', # not supported at the moment
             ]
             # 5.1 check if names in config['callbacks'] and they are one of the recognized callbacks
-            if not all('name' in callback and callback['name'] in callbacks for callback in config['callbacks']):
+            if not all('name' in callback and callback['name'] in callbacks for callback in config['callbacks']) or not type(config['name']) == list:
                 return None
 
             # 5.2 retrieve callback constructors
-            callbacks_constructors = [eval(callback['name']) for callback in config['callbacks']]
+            callback_constructors = [eval(callback['name']) for callback in config['callbacks']]
 
             # 5.3 remove callback['name'] and apply parameters to constructors
             callbacks = []
-            for callback in config['callbacks']:
-                del callback['name']
-                callbacks.append(apply_dict(callback_constructors[i],callback))
-
+            try:
+                for callback in config['callbacks']:
+                    del callback['name']
+                    callbacks.append(apply_dict(callback_constructors[i],callback))
+            except:
+                pass # some arguments for the callbacks are invalid, but that is fine
         # 6. return all parsed parameters
         result = {
                     'compile':{'loss':loss,'optimizer': optimizer},
@@ -197,7 +198,6 @@ class TaskBroker(object):
             task = TrainTask(name = task_name,config = config_str,dataset = dataset_model,weight = weight_model)
             task.save()
         except Exception as e:
-            raise e
             return TaskBroker.ERROR_CREATE_TASK
         # and take care of the Task successor issue
         if from_task:
@@ -258,3 +258,14 @@ class TaskBroker(object):
             return np.array(arr)
         except:
             return None
+
+    def mark_as_completed(self,name):
+        task = self.get_task_by_name(name)
+        if not task:
+            return TaskBroker.ERROR_TASK_DOES_NOT_EXIST
+        try:
+            task.completed = True
+            task.save()
+        except:
+            return TaskBroker.ERROR_TASK_DOES_NOT_EXIST
+

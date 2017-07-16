@@ -108,3 +108,10 @@ class DatasetBroker(object):
         out_shape = f['data']['y'].shape
         f.close()
         return in_shape,out_shape
+
+    def get_dataset_size(self,name):
+        shapes = self.get_io_shapes(name)
+        if not shapes:
+            return None
+        return shapes[0][0] # Get the first dim of 'X'
+
