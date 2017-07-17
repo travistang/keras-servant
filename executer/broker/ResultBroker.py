@@ -15,7 +15,7 @@ class ResultBroker(object):
         if type(task) != PredictTask:
             return ResultBroker.ERROR_TASK_TYPE_MISMATCH
 
-        result_str = numpy_to_json(result_arr)
+        result_str = numpy_to_json(result_arr) if type(result_arr) is not list else [numpy_to_json(arr) for arr in result_arr] # handling single output vs multiple output models
         if not result_str:
             return  ResultBroker.ERROR_INVALID_RESULT
 

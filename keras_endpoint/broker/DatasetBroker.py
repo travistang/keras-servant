@@ -39,18 +39,18 @@ class DatasetBroker(object):
             return False
         # It is a h5 file. Now check the keys
         if 'data/X' not in f or 'data/y' not in f:
-            print 'something not in f'
             return False
         # The dataset structure is as expected. Checking if there are more layers
-        if type(f['data/X']) != type(f['data/y']) or type(f['data/y']) != h5py._hl.dataset.Dataset:
+        if type(f['data']['X']) != type(f['data']['y']) or type(f['data']['y']) != h5py._hl.group.Group:
             print 'type mismatch'
             return False
+        for field in ['X','y']:
+            num_data = len(f['data'][field])
+            if any(i not in map(str,range(num_data)) for i in f['data'][field]):
+                return False
 
-        # Then check the dataset length
-        x_shape = f['data/X'].shape
-        y_shape = f['data/y'].shape
-        if x_shape[0] != y_shape[0]:
-            return False
+            if len(set(map(lambda d: f['data'][field][d].shape[0],f['data'][field]))) != 1:
+                return False
 
         # everything is fine. Good to go
         return True
@@ -72,29 +72,34 @@ class DatasetBroker(object):
                 copy_file(f,ft)
         except Exception as e:
             print e
+            if os.path.isfile(dataset_path):
+                os.remove(dataset_path)
             return DatasetBroker.ERROR_UNABLE_TO_CREATE_DATASET
 
 #        # and delete the temp file
-#        os.remove(f)
+        
+        #os.remove(f)
 
         # then check the file itself
-        if not self.is_valid_dataset(dataset_path):
-            return DatasetBroker.ERROR_INVALID_DATASET
-
-        # check if the new file is created correctly
-        if not os.path.isfile(dataset_path):
-            return DatasetBroker.ERROR_UNABLE_TO_CREATE_DATASET
-
-        # create and configure the new Dataset model
         try:
+            if not self.is_valid_dataset(dataset_path):
+                return DatasetBroker.ERROR_INVALID_DATASET
+
+            # check if the new file is created correctly
+            if not os.path.isfile(dataset_path):
+                return DatasetBroker.ERROR_UNABLE_TO_CREATE_DATASET
+
+            # create and configure the new Dataset model
             dataset_model = Dataset(name = file_name)
             dataset_model.dataset_file.name = dataset_path
 
             dataset_model.save()
-        except:
+        except Exception as e:
             # the model cannot be created for whatever reason
             # remove the saved dataset file
-            os.remove(dataset_path)
+            print e
+            if os.path.isfile(dataset_path):
+                os.remove(dataset_path)
             return DatasetBroker.ERROR_SAVING_DATASET
 
     def get_io_shapes(self,name):
@@ -113,5 +118,5 @@ class DatasetBroker(object):
         shapes = self.get_io_shapes(name)
         if not shapes:
             return None
-        return shapes[0][0] # Get the first dim of 'X'
+        return shapes[0][0][0] # Get the first dim of the first input of 'X'
 

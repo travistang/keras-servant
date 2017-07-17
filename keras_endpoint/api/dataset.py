@@ -31,6 +31,8 @@ def upload(request,dataset_name):
             return error_json_response_with_details('Cannot add a dataset with given name')
         if error == DatasetBroker.ERROR_UNABLE_TO_CREATE_DATASET:
             return error_json_response_with_details('Cannot create dataset')
+        if error == DatasetBroker.ERROR_SAVING_DATASET:
+            return error_json_response_with_details('Cannot save dataset')
         return error_json_response_with_details("Unknown error occured")
 
     return create_success_with_data([])

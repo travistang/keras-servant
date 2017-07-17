@@ -52,13 +52,14 @@ def perform_predict_task(task):
     try:
         weight_model = task.weight
         weight_file = weight_model.weight_file.file
-        input = np.array(json.loads(task.input))
+        input = json.loads(task.input)
         model_def = weight_model.model.definition
         model = model_from_json(model_def)
-        result = model.predict(input)
+        result = model.predict(np.array(input) if type(model.input_shape) == tuple else [np.array(inp) for inp in input])
         print 'result for evaluating task {} : {}'.format(task.name,result)
-        return np.array(result)
+        return result
     except:
+        raise
         return None
 
 def perform_train_task(task):
@@ -103,6 +104,7 @@ def cron_loop():
 
         # 2. load and perform the task
         if type(task) == PredictTask:
+            print 'predict...'
             result = perform_predict_task(task)
             # 3. store to the result
             if result is None: break # some error occured. Await for further handling
@@ -117,6 +119,7 @@ def cron_loop():
                 print error
             break # TODO: remove me
         else:
+            print 'train...'
             break
             # TODO: test this
             result = perform_train_task(task)

@@ -29,7 +29,7 @@ class TaskBroker(object):
     '''
     def add_predict_task(self,model_name,weight_name,task_name,inp_str):
         inp_arr =  self.array_from_json(inp_str)
-        if not inp_arr:
+        if inp_arr is None:
             return TaskBroker.ERROR_CREATE_ARRAY
 
         inp_arr = self.prepare_model_input(model_name,inp_str)
@@ -44,7 +44,7 @@ class TaskBroker(object):
             return error
 
         try:
-            task = PredictTask(name = task_name,weight = weight_model,input = inp_str)
+            task = PredictTask(name = task_name,weight = weight_model,input = inp_arr)
 
             task.save()
         except:
@@ -229,33 +229,64 @@ class TaskBroker(object):
 
         This function assumes that the model already exists and the input string is a valid JSON containing a numpy array. If it is not the case exceptions will be thrown.
 
+        The expected model input shapes will be (None,....) or [(None,...),(None,...)]
         To determine the input array can be fed into the model:
-            1. First check the dimension of the array. Let dim(x) be the dimension of x. Then dim(inp_arr) == dim(model_input) || dim(inp_arr) == dim(model_input) - 1.
-            1.1 If dim(inp_arr) == dim(model_input), then inp_arr[0].shape == model_input.shape[1:]
-            1.2 If dim(inp_arr) == dim(model_input) - 1, then inp_arr.shape == model_input.shape[1:]
-            2.1 If dim(inp_arr) == dim(model_input), then return inp_arr
-            2.2 If dim(inp_arr) == dim(model_input) - 1, then return inp_arr.expand_dims(0)
-            3. If None of the case above is true, return `None`
+             -First check the input shape of the model.
+                -If the model input shape is a list...
+                    -Get total number of inputs expected by the model
+                    -Parse the input array, check the first level
+                    -If the first level does not have the same number of element as the number of input, they do not match
+                    -Check the corresponding input to the inner array.
+                    -If any does not match, the whole thing does not match
+                    -Check the first dim. of each sub-array, if match, then OK
+                -Otherwise, check the shape matches...
 
     '''
     def prepare_model_input(self,model_name,inp_str):
+        def is_corresponding_input_OK(expected_shape,arr):
+            arr = np.array(arr)
+            dif = len(arr.shape) - len(expected_shape)
+            if dif == 0:
+                return arr.shape[1:] == expected_shape[1:]
+            elif dif == -1:
+                return arr.shape == expected_shape[1:]
+            else:
+                return False
+        def as_model_input(expected_shape,arr):
+            arr = np.array(arr)
+            dif = len(arr.shape) - len(expected_shape)
+            if dif == 0:
+                return arr
+            elif dif == -1:
+                return np.expand_dims(arr,0)
+
         inp_shape,out_shape = KerasModelBroker().get_io_shapes(model_name)
         input_arr = self.array_from_json(inp_str)
-        arr_shape = input_arr.shape
-        arr_dim = len(arr_shape)
-        inp_dim = len(inp_shape)
+        if type(input_arr) != list: # check if it is structured
+            return None
+        if type(inp_shape) == list: # 1.1
+            num_input = len(inp_shape)
+            if num_input != len(input_arr):
+                return None
 
-        if arr_dim == inp_dim and arr_shape[1:] == inp_shape[1:]:
-            return input_arr
-        if arr_dim == inp_dim - 1 and arr_shape == inp_shape[1:]:
-            return np.expand_dims(0,input_arr)
-        # neighter of the case above is true. The array cannot be fed into the model
-        return None
-
+            if not all(is_corresponding_input_OK(expected_shape,sub_array) for expected_shape,sub_array in zip(inp_shape,input_arr)):
+                return None
+            inputs = [as_model_input(expected_shape,arr) for expected_shape,arr in zip(inp_shape,input_arr)]
+            if not reduce(lambda a,b: a if a == b else None,[arr.shape[0] for arr in inputs]):
+                return None
+            return [inp.tolist() for inp in inputs] # return to normal list for retrieval later on
+        else:
+            inputs = as_model_input(inp_shape,input_arr)
+            if not inputs:
+                return None
+            if inputs.dtype == object:
+                return None # ragged array
+            # should be fine then..
+            return inputs
     def array_from_json(self,json_str):
         try:
             arr = json.loads(json_str)
-            return np.array(arr)
+            return arr
         except:
             return None
 
