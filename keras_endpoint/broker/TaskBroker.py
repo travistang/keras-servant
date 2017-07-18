@@ -290,13 +290,14 @@ class TaskBroker(object):
         except:
             return None
 
-    def mark_as_completed(self,name):
+    def mark_as_completed(self,name,isFalse = False):
         task = self.get_task_by_name(name)
         if not task:
+            print 'no such task'
             return TaskBroker.ERROR_TASK_DOES_NOT_EXIST
         try:
-            task.completed = True
+            task.completed = not isFalse
             task.save()
         except:
+            print 'unknown error'
             return TaskBroker.ERROR_TASK_DOES_NOT_EXIST
-

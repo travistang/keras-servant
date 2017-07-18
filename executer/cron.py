@@ -1,16 +1,17 @@
 from .broker.ResultBroker import ResultBroker
 from keras_endpoint.broker.TaskBroker import TaskBroker
-from keras_endpoint.models import Task,PredictTask,TrainTask
+from keras_endpoint.models import *
 from .models import PredictResult,TrainResult
+from keras_endpoint.broker.DatasetBroker import DatasetBroker
 from keras_endpoint.broker.KerasModelBroker import KerasModelBroker
 from keras_endpoint.broker.KerasModelWeightsBroker import KerasModelWeightsBroker
-
 from django.db.models import Min,Max
 from keras.models import model_from_json
 from keras_endpoint.utils import *
 import numpy as np
 from random import shuffle
 import h5py
+import json
 '''
     Auxillary functions
     Do not pass these to the crontab...
@@ -41,11 +42,14 @@ def get_data_generator(dataset,dataset_size,batch_size):
         # prepare indicies for this round
         # shuffle the indices and group by batch size. indices should be [(i1,i2,...in),(in+1,...)...]
         # https://stackoverflow.com/questions/1624883/alternative-way-to-split-a-list-into-groups-of-n
-        indicies = zip(*(iter(shuffle(range(dataset_size))),) * batch_size)
+        indicies = range(dataset_size)
+        shuffle(indicies)
+        indicies = zip(*(iter(indicies),) * batch_size)
         # for each batch of indices (i1,i2...in)...
         for batch_indicies in indicies:
-            batch_X = np.stack([X[i] for i in batch_indicies])
-            batch_y = np.stack([y[i] for i in batch_indicies])
+            # TODO: fix this for multiple input output models
+            batch_X = [np.array([X[i][b] for b in batch_indicies]) for i in X]
+            batch_y = [np.array([y[i][b] for b in batch_indicies]) for i in y]
             yield batch_X,batch_y
 
 def perform_predict_task(task):
@@ -87,11 +91,21 @@ def perform_train_task(task):
         return result
 
     except:
+        raise
         return None
 
-def save_train_result(result):
-    pass
-
+def save_train_result(task,result):
+    name = task.name
+    result = result.__dict__
+    model = result['model']
+    weight_path = 'result/train/{}_weights.h5'.format(name)
+    model.save_weights(weight_path)
+    if 'model' in result:
+        del result['model']
+    result = json.dumps(result)
+    result_model = TrainResult(of_task = task,result = weight_path,history = result)
+    result_model.save()
+    return result_model
 '''
     Main loop
 '''
@@ -117,13 +131,22 @@ def cron_loop():
                     print error
             else: 
                 print error
-            break # TODO: remove me
         else:
             print 'train...'
-            break
-            # TODO: test this
             result = perform_train_task(task)
+            if not result:
+                # what to do?
+                continue
             # 3. store to the result
-            save_train_result(result)
-            # 4. mark as completed
-            # TODO: this
+            error = TaskBroker().mark_as_completed(task.name)
+            if error:
+                TaskBroker().mark_as_completed(task.name,True)
+                print 'Unable to mark the task as completed'
+                continue
+
+            result = save_train_result(task,result)
+            if not result:
+                print 'Cannot save Train result,reverting mark as completed action'
+                TaskBroker().mark_as_completed(task.name,True)
+
+            break

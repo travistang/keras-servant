@@ -14,4 +14,5 @@ class PredictResult(Result):
     of_task = models.OneToOneField(PredictTask,primary_key = True,to_field = 'name')
 class TrainResult(Result):
     result = models.FileField()
+    history = models.TextField()
     of_task = models.OneToOneField(TrainTask,primary_key = True,to_field = 'name')

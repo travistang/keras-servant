@@ -109,8 +109,11 @@ class DatasetBroker(object):
         path = dataset.name
         import h5py
         f = h5py.File(path,'r')
-        in_shape = f['data']['X'].shape
-        out_shape = f['data']['y'].shape
+        print [i for i in f['data']['X']]
+        in_shape = [f['data']['X'][i].shape for i in f['data']['X']]
+        out_shape =[f['data']['y'][i].shape for i in f['data']['y']]
+        if len(in_shape) == 1: in_shape = in_shape[0] # remove the outer list if there is one tuple
+        if len(out_shape) == 1: out_shape = out_shape[0]
         f.close()
         return in_shape,out_shape
 
@@ -118,5 +121,9 @@ class DatasetBroker(object):
         shapes = self.get_io_shapes(name)
         if not shapes:
             return None
-        return shapes[0][0][0] # Get the first dim of the first input of 'X'
+        in_shapes = shapes[0]
+        if type(in_shapes) == list:
+            return in_shapes[0][0] # Get the first dim of the first input of 'X'
+        else:
+            return in_shapes[0] # Get the first dim of 'X'
 

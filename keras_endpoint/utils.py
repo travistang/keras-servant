@@ -75,20 +75,20 @@ def apply_dict(f,dict):
 
 def is_model_data_shape_consistent(m_in,m_out,d_in,d_out):
     # preprocessing: remove batch size / num data
-    merge_shape = lambda shapes: tuple(filter(lambda d: d is not None,np.array(shapes).flatten().tolist()))
-
-    # apply to the model's IO shape
-    m_in = m_in[1:] if type(m_in) is tuple else merge_shape(m_in)
-    m_out = m_out[1:] if type(m_out) is tuple else merge_shape(m_out)
-
-    # retrieve shapes for each records in the dataset
-    d_in = d_in[1:]
-    d_out = d_out[1:]
-
-    print m_in,m_out,d_in,d_out
-    # apply checking and return result
-    return m_in == m_out and d_in == d_out
-
+    if type(m_in) != type(d_in) or type(m_out) != type(d_out): # either list or tuple
+        return False
+    # check for both input,output
+    for m,d in [(m_in,d_in),(m_out,d_out)]:
+        if type(m) == list:
+            # check they have the same number of inputs
+            if len(m) != len(d): return False
+            # check all of the corresponding inputs have the same dimension except for the first one (which are None for model and # of data respectively)
+            return all(_m[1:] == _d[1:] for (_m,_d) in zip(m,d))
+        elif type(d) == tuple:
+            return m[1:] == d[1:]
+        else:
+            # what are they?
+            return False
 def json_to_numpy(s):
     try:
         return np.array(json.loads(s))
