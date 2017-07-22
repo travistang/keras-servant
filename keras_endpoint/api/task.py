@@ -5,6 +5,7 @@ from ..broker.KerasModelWeightsBroker import KerasModelWeightsBroker
 from ..broker.TaskBroker import TaskBroker
 from ..utils import *
 import json
+from django.http import JsonResponse
 
 @api_view(['POST'])
 def create_predict_task(request,model_name,weight_name):
@@ -47,7 +48,7 @@ def create_train_task(request,dataset_name,model_name,weight_name = None):
     error = broker.add_train_task(model_name,weight_name,dataset_name,task_name,config,from_task)
     if not error:
         return create_success_with_data([])
-    # TODO: handle possible errors here
+
     if error == TaskBroker.ERROR_CREATE_TASK:
         return error_json_response_with_details("Cannot create new task")
     if error == TaskBroker.ERROR_INVALID_CONFIG:
@@ -57,3 +58,18 @@ def create_train_task(request,dataset_name,model_name,weight_name = None):
     if error == TaskBroker.ERROR_MODEL_DATASET_SHAPE_MISMATCH:
         return error_json_response_with_details("The input/output shape of the given model does not match with the shape of the given dataset")
     return error_json_response_with_details("Unknown error")
+
+@api_view(["GET"])
+def get_tasks(request,name = None):
+    broker = TaskBroker()
+    if name:
+        tasks = broker.get_task_by_name(name,serialize = True)
+        if not tasks:
+            return error_json_response_with_details("No tasks with name {}".format(name))
+        return Response(tasks.data)
+    else:
+        predicts,trains = broker.get_tasks(serialize = True)
+        return JsonResponse({
+                'predict_task': predicts.data,
+                'train_task': trains.data,
+            })

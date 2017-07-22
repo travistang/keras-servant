@@ -15,3 +15,15 @@ class DatasetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Dataset
         fields = ('name',)
+
+class PredictTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PredictTask
+        fields = ('name','weight','completed')
+        depth = 2
+
+class TrainTaskSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TrainTask
+        fields = ('name','weight','completed','config','dataset')
+        depth = 2

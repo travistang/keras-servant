@@ -7,6 +7,7 @@ import numpy as np
 import json
 from keras.optimizers import *
 from keras.losses import *
+from ..serializer import PredictTaskSerializer,TrainTaskSerializer
 
 class TaskBroker(object):
     ERROR_CREATE_ARRAY = 1
@@ -16,14 +17,20 @@ class TaskBroker(object):
     ERROR_CREATE_TASK = 5
     ERROR_MODEL_DATASET_SHAPE_MISMATCH = 6
     ERROR_TASK_DOES_NOT_EXIST = 'ERROR_TASK_DOES_NOT_EXIST'
-    def get_task_by_name(self,name):
+    def get_task_by_name(self,name,serialize = False):
         try:
-            return PredictTask.objects.get(name = name)
+            result = PredictTask.objects.get(name = name)
+            return result if not serialize else PredictTaskSerializer(result)
         except:
             try:
-                return TrainTask.objects.get(name = name)
+                result = TrainTask.objects.get(name = name)
+                return result if not serialize else TrainTaskSerializer(result)
             except:
                 return None
+    def get_tasks(self,serialize = False):
+        predicts,trains = PredictTask.objects.all(),TrainTask.objects.all()
+        return (predicts,trains) if not serialize else (PredictTaskSerializer(predicts,many = True),TrainTaskSerializer(trains,many = True))
+
     '''
         Create a predict task
     '''
